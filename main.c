@@ -2,7 +2,7 @@
 #include<stdbool.h>
 #include<dirent.h>
 #include"necessity.h"
-#include<cjson/cJSON.h>
+#include"cJSON/cJSON.h"
 
 const char* cardBoxes = "./cardBoxes";
 
@@ -18,10 +18,10 @@ char* fileList(char* folder, char* ext) {
    
    if (sub != NULL && strcmp(sub, ext) == 0) { files[temp] = dir->d_name;
       printf("%i. %s\n", temp, dir->d_name); temp += 1;} 
-
+   
    if (sub == NULL) {free(sub);}} closedir(d); 
    
-   scanf("%i", &fileIndex); if (fileIndex >= temp) {free(file);}
+   scanf("%i", &fileIndex); if (fileIndex >= temp && file != NULL) {free(file);}
    else {file = files[fileIndex];}
    if (file != NULL) {return file;} return NULL;
 }
@@ -33,19 +33,27 @@ int main() { while (true) {
       case 1: 
          printf("Choose box to import:\n");
          char* file = fileList(cardBoxes, "html"); printf("\n"); if (file == NULL) {printf("fileList return null!"); return 0;}
-         
-         char command[110*sizeof(char)+sizeof(file)];
+         printf("szz");
+         char command[200*sizeof(char)];
          snprintf(command, sizeof(command), "awk -F 'lang-(nl|fr)\">' '{ for (i=2; i<=NF; i++) {split($i, a, \"<\"); print(a[1])}}' ./cardBoxes/%s", file);
-         
-         char* nlWords[500]; char* frWords[500]; FILE* output; int temp = -2; int index = 0;
-         char curWord[100]; char* words; output = popen(command, "r"); if (output==NULL) {printf("awk failed"); exit(0);}
+         printf("ddd");
+         FILE* output; char curWord[30*sizeof(char)]; cJSON* words = cJSON_CreateArray();
+         output = popen(command, "r"); if (output==NULL) {printf("awk failed"); exit(0);}
+         printf("plsgh");
+         while (fgets(curWord, sizeof(curWord), output)) {
+            cJSON* frNlArr = cJSON_CreateArray();
+            if (frNlArr==NULL) {break;}
+            
+            for (int i = 0; i<2; i++) {
+               char *newline = strchr(curWord, '\n');
+               if (newline != NULL) *newline = '\0';
+               cJSON_AddItemToArray(frNlArr, cJSON_CreateString(curWord)); 
+               if (fgets(curWord, sizeof(curWord), output)==NULL) {break;}
+            }
 
-         while (fgets(curWord, sizeof(curWord)-1, output)!=NULL) {if (temp>=0) { switch (abs(temp % 2)) {
-            case 0: frWords[index] = (char*)malloc((strlen(curWord)+1)*sizeof(char)); strcpy(frWords[index], curWord); break;
-            case 1: nlWords[index] = (char*)malloc((strlen(curWord)+1)*sizeof(char)); strcpy(nlWords[index], curWord); index++; break;
-         }}temp++;} 
-         
-
+            cJSON_AddItemToArray(words, frNlArr);
+         } printf("help"); printf("%s", cJSON_Print(words)); cJSON_Delete(words);
+ 
          break;
          
       case 2:
@@ -55,5 +63,5 @@ int main() { while (true) {
          todo(); break;
    
       default: _Exit(0);
-   }
+}
 } return 0;}
