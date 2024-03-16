@@ -33,13 +33,13 @@ int main() { while (true) {
       case 1: 
          printf("Choose box to import:\n");
          char* file = fileList(cardBoxes, "html"); printf("\n"); if (file == NULL) {printf("fileList return null!"); return 0;}
-         printf("szz");
+         
          char command[200*sizeof(char)];
          snprintf(command, sizeof(command), "awk -F 'lang-(nl|fr)\">' '{ for (i=2; i<=NF; i++) {split($i, a, \"<\"); print(a[1])}}' ./cardBoxes/%s", file);
-         printf("ddd");
+         
          FILE* output; char curWord[30*sizeof(char)]; cJSON* words = cJSON_CreateArray();
          output = popen(command, "r"); if (output==NULL) {printf("awk failed"); exit(0);}
-         printf("plsgh");
+
          while (fgets(curWord, sizeof(curWord), output)) {
             cJSON* frNlArr = cJSON_CreateArray();
             if (frNlArr==NULL) {break;}
@@ -52,7 +52,7 @@ int main() { while (true) {
             }
 
             cJSON_AddItemToArray(words, frNlArr);
-         } printf("help"); printf("%s", cJSON_Print(words)); cJSON_Delete(words);
+         } printf("%s", cJSON_Print(words)); cJSON_Delete(words);
  
          break;
          
