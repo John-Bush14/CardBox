@@ -37,7 +37,7 @@ int main() { while (true) {
          char command[200*sizeof(char)];
          snprintf(command, sizeof(command), "awk -F 'lang-(nl|fr)\">' '{ for (i=2; i<=NF; i++) {split($i, a, \"<\"); print(a[1])}}' ./cardBoxes/%s", file);
          
-         FILE* output; char curWord[30*sizeof(char)]; cJSON* words = cJSON_CreateArray();
+         FILE* output; char curWord[50*sizeof(char)]; cJSON* words = cJSON_CreateArray();
          output = popen(command, "r"); if (output==NULL) {printf("awk failed"); exit(0);}
 
          while (fgets(curWord, sizeof(curWord), output)) {
@@ -45,14 +45,15 @@ int main() { while (true) {
             if (frNlArr==NULL) {break;}
             
             for (int i = 0; i<2; i++) {
+               printf(curWord);
                char *newline = strchr(curWord, '\n');
                if (newline != NULL) *newline = '\0';
-               cJSON_AddItemToArray(frNlArr, cJSON_CreateString(curWord)); 
+               cJSON_AddItemToArray(frNlArr, cJSON_CreateString(curWord)); if (i == 1) {continue;}
                if (fgets(curWord, sizeof(curWord), output)==NULL) {break;}
             }
 
             cJSON_AddItemToArray(words, frNlArr);
-         } printf("%s", cJSON_Print(words)); cJSON_Delete(words);
+         } printf("%s", cJSON_Print(words)); pclose(output); cJSON_Delete(words);
  
          break;
          
