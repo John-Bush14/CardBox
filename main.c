@@ -20,7 +20,6 @@ char* fileList(char* folder, char* ext) {
       printf("%i. %s\n", temp, dir->d_name); temp += 1;} 
    
    if (sub == NULL) {free(sub);}} closedir(d); 
-   
    scanf("%i", &fileIndex); if (fileIndex >= temp && file != NULL) {free(file);}
    else {file = files[fileIndex];}
    if (file != NULL) {return file;} return NULL;
@@ -33,11 +32,11 @@ int main() { while (true) {
       case 1:
          // get files to import
          printf("Choose box to import:\n");
-         char* file = fileList(cardBoxes, "html"); printf("\n"); if (file == NULL) {printf("fileList return null!"); return 0;}
+         char* UIFilePath = fileList(cardBoxes, "html"); printf("\n"); if (UIFilePath == NULL) {printf("fileList return null!"); return 0;}
          
          // seperate file into words
          char command[200*sizeof(char)]; 
-         snprintf(command, sizeof(command), "awk -F 'lang-(nl|fr)\">' '{ for (i=2; i<=NF; i++) {split($i, a, \"<\"); print(a[1])}}' ./cardBoxes/%s", file);
+         snprintf(command, sizeof(command), "awk -F 'lang-(nl|fr)\">' '{ for (i=2; i<=NF; i++) {split($i, a, \"<\"); print(a[1])}}' ./cardBoxes/%s", UIFilePath);
          
          FILE* output; char curWord[50*sizeof(char)]; cJSON* words = cJSON_CreateArray(); int wordslen = 0;
          output = popen(command, "r"); if (output==NULL) {printf("awk failed"); exit(0);}
@@ -70,18 +69,25 @@ int main() { while (true) {
          cJSON_AddItemToObject(box, "offset", cJSON_CreateNumber(0));
 
          // finally write that to savefile
-         char name[50*sizeof(char)]; printf("\n\nname? "); scanf("%s", name); char filePath[100*sizeof(char)];
-         snprintf(filePath, sizeof(filePath), "cardBoxes/%s.json", name);
-         FILE* svFile = fopen(filePath, "w");  
+         char name[50*sizeof(char)]; printf("\n\nname? "); scanf("%s", name); char svFilePath[100*sizeof(char)];
+         snprintf(svFilePath, sizeof(svFilePath), "cardBoxes/%s.json", name);
+         FILE* svFile = fopen(svFilePath, "w");  
          if (svFile == NULL) {printf("help"); cJSON_Delete(box); return 0;}
 
          fprintf(svFile, cJSON_Print(box));
 
-         cJSON_Delete(box); fclose(svFile);
+         cJSON_Delete(box); fclose(svFile); if (UIFilePath!=NULL) {free(UIFilePath);}
          break;
          
       case 2:
-         todo(); break;
+         char* fileName = fileList(cardBoxes, "json"); if (fileName==NULL) {free(fileName); return 0;}      
+         char filePath[200*sizeof(char)]; snprintf(filePath, sizeof(filePath), "cardBoxes/%s", fileName);
+
+         FILE* svFilePtr = fopen(filePath, "r");
+         char svFileStr[10000*sizeof(char)]; fscanf(svFilePtr, "%s", &svFileStr);
+         fclose(svFilePtr);
+
+         break;
 
       case 3:
          todo(); break;
