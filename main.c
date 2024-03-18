@@ -3,6 +3,7 @@
 #include<dirent.h>
 #include"necessity.h"
 #include"cJSON/cJSON.h"
+#include<time.h>
 
 const char* cardBoxes = "./cardBoxes";
 
@@ -107,7 +108,8 @@ int main() { while (true) {
 
          // learning file
          while (cJSON_GetArraySize(todo) > 0) {
-            cJSON* set = cJSON_GetArrayItem(todo, 0);
+            srand(time(NULL));
+            cJSON* set = cJSON_GetArrayItem(todo, rand()%cJSON_GetArraySize(todo));
             cJSON* fr = cJSON_GetArrayItem(set, 0);
             cJSON* nl = cJSON_GetArrayItem(set, 1);
 
