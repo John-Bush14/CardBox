@@ -7,6 +7,7 @@
 
 const char* cardBoxes = "./cardBoxes";
 const int SETSIZE = 20;
+const in MAX_CHOOSEINDEX = 10
 
 void TODO() {printf("NOT DONE BRUV"); _Exit(0);}
 
@@ -112,7 +113,7 @@ int main() { while (true) {
 
          while (cJSON_GetArraySize(todo) > sizeTarget) {
             srand(time(NULL));
-            cJSON* set = cJSON_GetArrayItem(todo, rand()%cJSON_GetArraySize(todo));
+            cJSON* set = cJSON_GetArrayItem(todo, rand()%min(cJSON_GetArraySize(todo), MAX_CHOOSEINDEX));
             cJSON* fr = cJSON_GetArrayItem(set, 0);
             cJSON* nl = cJSON_GetArrayItem(set, 1);
 
