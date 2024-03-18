@@ -126,7 +126,12 @@ int main() { while (true) {
                previous->valueint = previous->valueint-1;
                next->valueint = next->valueint+1;
 
-         
+               if (previous->valueint == 0) {
+                  previous->valueint = next->valueint; next->valueint = 0;
+                  offset->valueint = offset->valueint + 1;
+
+                  todo = next; next = cJSON_CreateObject();
+               }
             }
             else {
                printf("wrong : %s\n", fr->valuestring);
