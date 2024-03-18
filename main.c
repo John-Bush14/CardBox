@@ -3,10 +3,14 @@
 #include<dirent.h>
 #include"necessity.h"
 #include"cJSON/cJSON.h"
+#include<time.h>
 
 const char* cardBoxes = "./cardBoxes";
+const int SETSIZE = 20;
+const int MAX_CHOOSEINDEX = 10;
+const char CORRECTION_CHAR = 'z';
 
-void todo() {printf("NOT DONE BRUV"); _Exit(0);}
+void TODO() {printf("NOT DONE BRUV"); _Exit(0);}
 
 char* fileList(char* folder, char* ext) {
    DIR *d; struct dirent *dir; d = opendir(folder); if (!d) {printf("help!");}
@@ -20,7 +24,6 @@ char* fileList(char* folder, char* ext) {
       printf("%i. %s\n", temp, dir->d_name); temp += 1;} 
    
    if (sub == NULL) {free(sub);}} closedir(d); 
-   
    scanf("%i", &fileIndex); if (fileIndex >= temp && file != NULL) {free(file);}
    else {file = files[fileIndex];}
    if (file != NULL) {return file;} return NULL;
@@ -30,14 +33,14 @@ int main() { while (true) {
    printf("1. Import box, 2. Learn box or 3. See progress\n"); int action; scanf("%i", &action);
 
    switch (action) {
-      case 1:
+      case 1: // importing box (searchpoint)
          // get files to import
          printf("Choose box to import:\n");
-         char* file = fileList(cardBoxes, "html"); printf("\n"); if (file == NULL) {printf("fileList return null!"); return 0;}
-         
+         char* UIFilePath = fileList(cardBoxes, "html"); printf("\n"); if (UIFilePath == NULL) {printf("fileList return null!"); return 0;}
+                  
          // seperate file into words
          char command[200*sizeof(char)]; 
-         snprintf(command, sizeof(command), "awk -F 'lang-(nl|fr)\">' '{ for (i=2; i<=NF; i++) {split($i, a, \"<\"); print(a[1])}}' ./cardBoxes/%s", file);
+         snprintf(command, sizeof(command), "awk -F 'lang-(nl|fr)\">' '{ for (i=2; i<=NF; i++) {split($i, a, \"<\"); print(a[1])}}' ./cardBoxes/%s", UIFilePath);
          
          FILE* output; char curWord[50*sizeof(char)]; cJSON* words = cJSON_CreateArray(); int wordslen = 0;
          output = popen(command, "r"); if (output==NULL) {printf("awk failed"); exit(0);}
@@ -69,22 +72,87 @@ int main() { while (true) {
          cJSON_AddItemToObject(box, "next", cJSON_CreateNumber(0));
          cJSON_AddItemToObject(box, "offset", cJSON_CreateNumber(0));
 
-         // finally write that to savefile
-         char name[50*sizeof(char)]; printf("\n\nname? "); scanf("%s", name); char filePath[100*sizeof(char)];
-         snprintf(filePath, sizeof(filePath), "cardBoxes/%s.json", name);
-         FILE* svFile = fopen(filePath, "w");  
+         // write to savefile
+         char name[50*sizeof(char)]; printf("\n\nname? "); scanf("%s", name); char svFilePath[100*sizeof(char)];
+         snprintf(svFilePath, sizeof(svFilePath), "cardBoxes/%s.json", name);
+         FILE* svFile = fopen(svFilePath, "w");  
          if (svFile == NULL) {printf("help"); cJSON_Delete(box); return 0;}
 
          fprintf(svFile, cJSON_Print(box));
 
-         cJSON_Delete(box); fclose(svFile);
+         cJSON_Delete(box); fclose(svFile); if (UIFilePath!=NULL) {free(UIFilePath);}
          break;
          
-      case 2:
-         todo(); break;
+      case 2: // learning box (searchpoint)
+         // read savefile
+         char* fileName = fileList(cardBoxes, "json"); if (fileName==NULL) {free(fileName); return 0;}      
+         char filePath[200*sizeof(char)]; snprintf(filePath, sizeof(filePath), "cardBoxes/%s", fileName);
 
-      case 3:
-         todo(); break;
+         FILE* svFilePtr = fopen(filePath, "r");
+
+         fseek(svFilePtr, 0, SEEK_END);
+         long fileSize = ftell(svFilePtr);
+         fseek(svFilePtr, 0, SEEK_SET);
+
+         char *svFileStr = (char *)malloc(fileSize + 1);
+         fread(svFileStr, sizeof(char), fileSize, svFilePtr);
+         svFileStr[fileSize] = '\0';
+
+         fclose(svFilePtr);
+
+         // parse file
+         cJSON* cardbox = cJSON_Parse(svFileStr);
+
+         cJSON* todo = cJSON_GetObjectItemCaseSensitive(cardbox, "todo");
+         cJSON* done = cJSON_GetObjectItemCaseSensitive(cardbox, "done");
+         cJSON* next = cJSON_GetObjectItemCaseSensitive(cardbox, "next");
+         cJSON* previous = cJSON_GetObjectItemCaseSensitive(cardbox, "previous");
+         cJSON* offset = cJSON_GetObjectItemCaseSensitive(cardbox, "offset");
+         
+         // learning file
+         int sizeTarget = max(cJSON_GetArraySize(todo)-SETSIZE, 0);
+
+         while (cJSON_GetArraySize(todo) > sizeTarget) {
+            srand(time(NULL));
+            cJSON* set = cJSON_GetArrayItem(todo, rand()%min(cJSON_GetArraySize(todo), MAX_CHOOSEINDEX));
+            cJSON* fr = cJSON_GetArrayItem(set, 0);
+            cJSON* nl = cJSON_GetArrayItem(set, 1);
+
+            printf("\033[H\033[J \n%s\n\n\n", cJSON_Print(nl));
+            char answer[100*sizeof(char)]; scanf("%s", &answer);
+
+            if (strcmp(answer, fr->valuestring) != 0) {
+               printf("wrong : %s\n\n", fr->valuestring);
+               
+               char delay; scanf(" %c", &delay);
+               if (delay != CORRECTION_CHAR) {
+                  cJSON_AddItemToArray(todo, cJSON_DetachItemFromArray(todo, 0));
+
+                  continue;
+               }
+            }
+
+            printf("correct: %s\n", fr->valuestring); 
+            cJSON_AddItemToArray(done, cJSON_DetachItemFromArray(todo, 0));
+
+            previous->valueint = previous->valueint-1;
+            next->valueint = next->valueint+1;
+
+            if (previous->valueint == 0) {
+               previous->valueint = next->valueint; next->valueint = 0;
+               offset->valueint = offset->valueint + 1;
+
+               todo = next; next = cJSON_CreateObject();
+            }
+         }
+         svFilePtr = fopen(filePath, "w");
+         fprintf(svFilePtr, cJSON_Print(cardbox));
+         fclose(svFilePtr);
+
+         cJSON_Delete(cardbox); break;
+
+      case 3: // showing box (searchpoint)
+         TODO(); break;
    
       default: _Exit(0);
 }
