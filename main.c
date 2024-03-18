@@ -7,7 +7,7 @@
 
 const char* cardBoxes = "./cardBoxes";
 const int SETSIZE = 20;
-const in MAX_CHOOSEINDEX = 10
+const int MAX_CHOOSEINDEX = 10;
 
 void TODO() {printf("NOT DONE BRUV"); _Exit(0);}
 
@@ -117,7 +117,7 @@ int main() { while (true) {
             cJSON* fr = cJSON_GetArrayItem(set, 0);
             cJSON* nl = cJSON_GetArrayItem(set, 1);
 
-            printf("%s\n\n\n", cJSON_Print(nl));
+            printf("\033[H\033[J \n%s\n\n\n", cJSON_Print(nl));
             char answer[100*sizeof(char)]; scanf("%s", &answer);
 
             if (strcmp(answer, fr->valuestring) == 0) {
