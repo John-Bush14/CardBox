@@ -140,7 +140,10 @@ int main() { while (true) {
                cJSON_AddItemToArray(todo, cJSON_DetachItemFromArray(todo, 0));
             }
          }
-            
+         svFilePtr = fopen(filePath, "w");
+         fprintf(svFilePtr, cJSON_Print(cardbox));
+         fclose(svFilePtr);
+
          cJSON_Delete(cardbox); break;
 
       case 3: // showing box (searchpoint)
