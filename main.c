@@ -6,6 +6,7 @@
 #include<time.h>
 
 const char* cardBoxes = "./cardBoxes";
+const int SETSIZE = 20;
 
 void TODO() {printf("NOT DONE BRUV"); _Exit(0);}
 
@@ -105,9 +106,11 @@ int main() { while (true) {
          cJSON* next = cJSON_GetObjectItemCaseSensitive(cardbox, "next");
          cJSON* previous = cJSON_GetObjectItemCaseSensitive(cardbox, "next");
          cJSON* offset = cJSON_GetObjectItemCaseSensitive(cardbox, "offset");
-
+         
          // learning file
-         while (cJSON_GetArraySize(todo) > 0) {
+         int sizeTarget = max(cJSON_GetArraySize(todo)-SETSIZE, 0);
+
+         while (cJSON_GetArraySize(todo) > sizeTarget) {
             srand(time(NULL));
             cJSON* set = cJSON_GetArrayItem(todo, rand()%cJSON_GetArraySize(todo));
             cJSON* fr = cJSON_GetArrayItem(set, 0);
@@ -122,6 +125,8 @@ int main() { while (true) {
 
                previous->valueint = previous->valueint-1;
                next->valueint = next->valueint+1;
+
+         
             }
             else {
                printf("wrong : %s\n", fr->valuestring);
