@@ -6,7 +6,7 @@
 
 const char* cardBoxes = "./cardBoxes";
 
-void todo() {printf("NOT DONE BRUV"); _Exit(0);}
+void TODO() {printf("NOT DONE BRUV"); _Exit(0);}
 
 char* fileList(char* folder, char* ext) {
    DIR *d; struct dirent *dir; d = opendir(folder); if (!d) {printf("help!");}
@@ -85,15 +85,20 @@ int main() { while (true) {
          char filePath[200*sizeof(char)]; snprintf(filePath, sizeof(filePath), "cardBoxes/%s", fileName);
 
          FILE* svFilePtr = fopen(filePath, "r");
-         char svFileStr[10000*sizeof(char)]; fscanf(svFilePtr, "%s", &svFileStr);
+
+         fseek(svFilePtr, 0, SEEK_END);
+         long fileSize = ftell(svFilePtr);
+         fseek(svFilePtr, 0, SEEK_SET);
+
+         char *svFileStr = (char *)malloc(fileSize + 1);
+         fread(svFileStr, sizeof(char), fileSize, svFilePtr);
+         svFileStr[fileSize] = '\0';
+
          fclose(svFilePtr);
 
-         // learning file
-
-         break;
 
       case 3: // showing box (searchpoint)
-         todo(); break;
+         TODO(); break;
    
       default: _Exit(0);
 }
