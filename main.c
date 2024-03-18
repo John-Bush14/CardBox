@@ -106,7 +106,7 @@ int main() { while (true) {
          cJSON* todo = cJSON_GetObjectItemCaseSensitive(cardbox, "todo");
          cJSON* done = cJSON_GetObjectItemCaseSensitive(cardbox, "done");
          cJSON* next = cJSON_GetObjectItemCaseSensitive(cardbox, "next");
-         cJSON* previous = cJSON_GetObjectItemCaseSensitive(cardbox, "next");
+         cJSON* previous = cJSON_GetObjectItemCaseSensitive(cardbox, "previous");
          cJSON* offset = cJSON_GetObjectItemCaseSensitive(cardbox, "offset");
          
          // learning file
@@ -126,7 +126,6 @@ int main() { while (true) {
                
                char delay; scanf(" %c", &delay);
                if (delay != CORRECTION_CHAR) {
-
                   cJSON_AddItemToArray(todo, cJSON_DetachItemFromArray(todo, 0));
 
                   continue;
