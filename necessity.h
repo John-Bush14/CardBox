@@ -22,4 +22,32 @@ char* substr(char* str, int x, int y) {
    return substr;
 }
 
+void printRaw(const char *str) {
+    while (*str) {
+        if (*str == '\n') {
+            printf("\\n");
+        } else if (*str == '\t') {
+            printf("\\t");
+        } else {
+            printf("%c", *str);
+        }
+        str++;
+    }
+    printf("\n");
+}
+
+int max(int num1, int num2) {
+    if (num1 > num2) {
+        return num1;
+    } else {
+        return num2;
+    }
+}
+int min(int num1, int num2) {
+    if (num1 < num2) {
+        return num1;
+    } else {
+        return num2;
+    }
+}
 #endif
