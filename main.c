@@ -96,6 +96,10 @@ int main() { while (true) {
 
          fclose(svFilePtr);
 
+         // parse file
+         cJSON* cardbox = cJSON_Parse(svFileStr);
+
+
 
       case 3: // showing box (searchpoint)
          TODO(); break;
