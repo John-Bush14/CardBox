@@ -33,7 +33,7 @@ int main() { while (true) {
          // get files to import
          printf("Choose box to import:\n");
          char* UIFilePath = fileList(cardBoxes, "html"); printf("\n"); if (UIFilePath == NULL) {printf("fileList return null!"); return 0;}
-         
+                  
          // seperate file into words
          char command[200*sizeof(char)]; 
          snprintf(command, sizeof(command), "awk -F 'lang-(nl|fr)\">' '{ for (i=2; i<=NF; i++) {split($i, a, \"<\"); print(a[1])}}' ./cardBoxes/%s", UIFilePath);
@@ -99,7 +99,36 @@ int main() { while (true) {
          // parse file
          cJSON* cardbox = cJSON_Parse(svFileStr);
 
+         cJSON* todo = cJSON_GetObjectItemCaseSensitive(cardbox, "todo");
+         cJSON* done = cJSON_GetObjectItemCaseSensitive(cardbox, "done");
+         cJSON* next = cJSON_GetObjectItemCaseSensitive(cardbox, "next");
+         cJSON* previous = cJSON_GetObjectItemCaseSensitive(cardbox, "next");
+         cJSON* offset = cJSON_GetObjectItemCaseSensitive(cardbox, "offset");
 
+         // learning file
+         while (cJSON_GetArraySize(todo) > 0) {
+            cJSON* set = cJSON_GetArrayItem(todo, 0);
+            cJSON* fr = cJSON_GetArrayItem(set, 0);
+            cJSON* nl = cJSON_GetArrayItem(set, 1);
+
+            printf("%s\n\n\n", cJSON_Print(nl));
+            char answer[100*sizeof(char)]; scanf("%s", &answer);
+
+            if (strcmp(answer, fr->valuestring) == 0) {
+               printf("correct: %s\n", fr->valuestring); 
+               cJSON_AddItemToArray(done, cJSON_DetachItemFromArray(todo, 0));
+
+               previous->valueint = previous->valueint-1;
+               next->valueint = next->valueint+1;
+            }
+            else {
+               printf("wrong : %s\n", fr->valuestring);
+
+               cJSON_AddItemToArray(todo, cJSON_DetachItemFromArray(todo, 0));
+            }
+         }
+            
+         cJSON_Delete(cardbox); break;
 
       case 3: // showing box (searchpoint)
          TODO(); break;
