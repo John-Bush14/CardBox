@@ -29,7 +29,7 @@ int main() { while (true) {
    printf("1. Import box, 2. Learn box or 3. See progress\n"); int action; scanf("%i", &action);
 
    switch (action) {
-      case 1:
+      case 1: // importing box (searchpoint)
          // get files to import
          printf("Choose box to import:\n");
          char* UIFilePath = fileList(cardBoxes, "html"); printf("\n"); if (UIFilePath == NULL) {printf("fileList return null!"); return 0;}
@@ -68,7 +68,7 @@ int main() { while (true) {
          cJSON_AddItemToObject(box, "next", cJSON_CreateNumber(0));
          cJSON_AddItemToObject(box, "offset", cJSON_CreateNumber(0));
 
-         // finally write that to savefile
+         // write to savefile
          char name[50*sizeof(char)]; printf("\n\nname? "); scanf("%s", name); char svFilePath[100*sizeof(char)];
          snprintf(svFilePath, sizeof(svFilePath), "cardBoxes/%s.json", name);
          FILE* svFile = fopen(svFilePath, "w");  
@@ -79,7 +79,8 @@ int main() { while (true) {
          cJSON_Delete(box); fclose(svFile); if (UIFilePath!=NULL) {free(UIFilePath);}
          break;
          
-      case 2:
+      case 2: // learning box (searchpoint)
+         // read savefile
          char* fileName = fileList(cardBoxes, "json"); if (fileName==NULL) {free(fileName); return 0;}      
          char filePath[200*sizeof(char)]; snprintf(filePath, sizeof(filePath), "cardBoxes/%s", fileName);
 
@@ -87,9 +88,11 @@ int main() { while (true) {
          char svFileStr[10000*sizeof(char)]; fscanf(svFilePtr, "%s", &svFileStr);
          fclose(svFilePtr);
 
+         // learning file
+
          break;
 
-      case 3:
+      case 3: // showing box (searchpoint)
          todo(); break;
    
       default: _Exit(0);
