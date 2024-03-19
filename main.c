@@ -80,7 +80,7 @@ int main() { while (true) {
 
          fprintf(svFile, cJSON_Print(box));
 
-         cJSON_Delete(box); fclose(svFile); if (UIFilePath!=NULL) {free(UIFilePath);}
+         cJSON_Delete(box); fclose(svFile); 
          break;
          
       case 2: // learning box (searchpoint)
@@ -151,7 +151,7 @@ int main() { while (true) {
 
          cJSON_Delete(cardbox); break;
 
-      case 3: // showing box (searchpoint)
+      case 3: // showing progress (searchpoint)
          TODO(); break;
    
       default: _Exit(0);
