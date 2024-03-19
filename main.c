@@ -143,7 +143,7 @@ int main() { while (true) {
                offset->valueint = offset->valueint + 1;
 
                todo = next; next = cJSON_CreateObject();
-            }
+            } previous->valuedouble = previous->valueint; next->valuedouble = next->valueint;
          }
          svFilePtr = fopen(filePath, "w");
          fprintf(svFilePtr, cJSON_Print(cardbox));
