@@ -108,9 +108,11 @@ int main() { while (true) {
          cJSON* next = cJSON_GetObjectItemCaseSensitive(cardbox, "next");
          cJSON* previous = cJSON_GetObjectItemCaseSensitive(cardbox, "previous");
          cJSON* offset = cJSON_GetObjectItemCaseSensitive(cardbox, "offset");
+         cJSON* completions = cJSON_GetObjectItemCaseSensitive(cardbox, "completions");
          
          // learning file
          int sizeTarget = max(cJSON_GetArraySize(todo)-SETSIZE, 0);
+         double correct = 0; double wrong = 0;
 
          while (cJSON_GetArraySize(todo) > sizeTarget) {
             srand(time(NULL));
@@ -127,11 +129,14 @@ int main() { while (true) {
                char delay; scanf(" %c", &delay);
                if (delay != CORRECTION_CHAR) {
                   cJSON_AddItemToArray(todo, cJSON_DetachItemFromArray(todo, 0));
+                  
+                  if (wrong+correct < SETSIZE) {wrong += 1;}
 
                   continue;
                }
             }
-
+            if (wrong+correct < SETSIZE) {correct += 1;}
+            
             printf("correct: %s\n", fr->valuestring); 
             cJSON_AddItemToArray(done, cJSON_DetachItemFromArray(todo, 0));
 
@@ -145,6 +150,18 @@ int main() { while (true) {
                todo = next; next = cJSON_CreateObject();
             } previous->valuedouble = previous->valueint; next->valuedouble = next->valueint;
          }
+         cJSON* completion = cJSON_CreateArray();  
+         cJSON_AddItemToArray(completion, cJSON_CreateNumber(correct/SETSIZE));   
+         
+         time_t now = time(NULL) ;
+         struct tm curTime ;
+         localtime_r(&now, &curTime) ;
+         char ftime[100] ;
+         strftime(ftime, sizeof(ftime), "%Y%m%d%H%M%S", &curTime) ;
+         cJSON_AddItemToArray(completion, cJSON_CreateString(ftime));
+
+         cJSON_AddItemToArray(completions, completion);
+
          svFilePtr = fopen(filePath, "w");
          fprintf(svFilePtr, cJSON_Print(cardbox));
          fclose(svFilePtr);
