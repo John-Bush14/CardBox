@@ -4,6 +4,8 @@
 #include"necessity.h"
 #include"cJSON/cJSON.h"
 #include<time.h>
+#include<pthread.h>
+#include<plplot/plplot.h>
 
 const char* cardBoxes = "./cardBoxes";
 const int SETSIZE = 20;
@@ -29,8 +31,21 @@ char* fileList(char* folder, char* ext) {
    if (file != NULL) {return file;} return NULL;
 }
 
+void plotProgress(cJSON* cJSON_Save) {     
+   plsdev("qtwidget");
+   plinit();
+
+   
+   
+   // End PLplot
+   plend();
+
+   free(cJSON_Save); pthread_exit(NULL);
+}
+
 int main() { while (true) {
    printf("1. Import box, 2. Learn box or 3. See progress\n"); int action; scanf("%i", &action);
+   pthread_t thread;
 
    switch (action) {
       case 1: // importing box (searchpoint)
@@ -84,24 +99,12 @@ int main() { while (true) {
          break;
          
       case 2: // learning box (searchpoint)
-         // read savefile
          char* fileName = fileList(cardBoxes, "json"); if (fileName==NULL) {free(fileName); return 0;}      
          char filePath[200*sizeof(char)]; snprintf(filePath, sizeof(filePath), "cardBoxes/%s", fileName);
 
-         FILE* svFilePtr = fopen(filePath, "r");
-
-         fseek(svFilePtr, 0, SEEK_END);
-         long fileSize = ftell(svFilePtr);
-         fseek(svFilePtr, 0, SEEK_SET);
-
-         char *svFileStr = (char *)malloc(fileSize + 1);
-         fread(svFileStr, sizeof(char), fileSize, svFilePtr);
-         svFileStr[fileSize] = '\0';
-
-         fclose(svFilePtr);
-
+         char* svFileStr = read(filePath);
          // parse file
-         cJSON* cardbox = cJSON_Parse(svFileStr);
+         cJSON* cardbox = cJSON_Parse(svFileStr); 
 
          cJSON* todo = cJSON_GetObjectItemCaseSensitive(cardbox, "todo");
          cJSON* done = cJSON_GetObjectItemCaseSensitive(cardbox, "done");
@@ -109,6 +112,16 @@ int main() { while (true) {
          cJSON* previous = cJSON_GetObjectItemCaseSensitive(cardbox, "previous");
          cJSON* offset = cJSON_GetObjectItemCaseSensitive(cardbox, "offset");
          cJSON* completions = cJSON_GetObjectItemCaseSensitive(cardbox, "completions");
+
+         // checking for completion
+         if (previous->valueint == 0) {
+            previous->valueint = next->valueint; next->valueint = 0;
+            offset->valueint = offset->valueint + 1;
+            
+            while (cJSON_GetArraySize(done) > 0) {
+               cJSON_AddItemToArray(todo, cJSON_DetachItemFromArray(done, 0));
+            }
+         } 
          
          // learning file
          int sizeTarget = max(cJSON_GetArraySize(todo)-SETSIZE, 0);
@@ -142,13 +155,8 @@ int main() { while (true) {
 
             previous->valueint = previous->valueint-1;
             next->valueint = next->valueint+1;
-
-            if (previous->valueint == 0) {
-               previous->valueint = next->valueint; next->valueint = 0;
-               offset->valueint = offset->valueint + 1;
-
-               todo = next; next = cJSON_CreateObject();
-            } previous->valuedouble = previous->valueint; next->valuedouble = next->valueint;
+            
+            previous->valuedouble = previous->valueint; next->valuedouble = next->valueint; offset->valuedouble = offset->valueint;
          }
          cJSON* completion = cJSON_CreateArray();  
          cJSON_AddItemToArray(completion, cJSON_CreateNumber(correct/SETSIZE));   
@@ -162,15 +170,21 @@ int main() { while (true) {
 
          cJSON_AddItemToArray(completions, completion);
 
-         svFilePtr = fopen(filePath, "w");
+         FILE* svFilePtr = fopen(filePath, "w");
          fprintf(svFilePtr, cJSON_Print(cardbox));
          fclose(svFilePtr);
 
          cJSON_Delete(cardbox); break;
 
       case 3: // showing progress (searchpoint)
-         TODO(); break;
+         char* svFileName = fileList(cardBoxes, "json"); if (svFileName==NULL) {free(svFileName); return 0;}      
+         char FilePath[200*sizeof(char)]; snprintf(FilePath, sizeof(FilePath), "cardBoxes/%s", svFileName);
+         cJSON* cJSON_Save = malloc(sizeof(cJSON)); if (cJSON_Save == NULL) {return 0;} 
+         cJSON_Save = cJSON_Parse(read(FilePath));
+         pthread_create(&thread, NULL, plotProgress, cJSON_Save);
+
+         break;
    
-      default: _Exit(0);
-}
+      default: pthread_join(thread, NULL); _Exit(0); 
+   }
 } return 0;}

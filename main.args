@@ -1,1 +1,1 @@
--lcjson
+-lcjson -lplplot -pthread
