@@ -50,4 +50,18 @@ int min(int num1, int num2) {
         return num2;
     }
 }
+
+char* read(char* filePath) {
+   FILE* filePtr = fopen(filePath, "r");
+
+   fseek(filePtr, 0, SEEK_END);
+   long fileSize = ftell(filePtr);
+   fseek(filePtr, 0, SEEK_SET);
+
+   char *fileStr = (char *)malloc(fileSize + 1);
+   fread(fileStr, sizeof(char), fileSize, filePtr);
+   fileStr[fileSize] = '\0';
+
+   fclose(filePtr); return fileStr;
+}
 #endif
