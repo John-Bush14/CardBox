@@ -22,6 +22,18 @@ char* substr(char* str, int x, int y) {
    return substr;
 }
 
+char* scanfn() { // ends scan when user newlines
+   static char input[100]; // Assuming input line won't exceed 100 characters
+   if (input == NULL) {return NULL;}
+
+   fgets(input, sizeof(input), stdin);
+
+   // Remove trailing newline character if present
+   input[strcspn(input, "\n")] = '\0';
+
+   return input;
+}
+
 void printRaw(const char *str) {
     while (*str) {
         if (*str == '\n') {

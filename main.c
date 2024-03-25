@@ -10,7 +10,6 @@
 const char* cardBoxes = "./cardBoxes";
 const int SETSIZE = 20;
 const int MAX_CHOOSEINDEX = 10;
-const char CORRECTION_CHAR = 'z';
 
 void TODO() {printf("NOT DONE BRUV"); _Exit(0);}
 
@@ -49,6 +48,7 @@ int main() { while (true) {
 
    switch (action) {
       case 1: // importing box (searchpoint)
+
          // get files to import
          printf("Choose box to import:\n");
          char* UIFilePath = fileList(cardBoxes, "html"); printf("\n"); if (UIFilePath == NULL) {printf("fileList return null!"); return 0;}
@@ -134,13 +134,13 @@ int main() { while (true) {
             cJSON* nl = cJSON_GetArrayItem(set, 1);
 
             printf("\033[H\033[J \n%s\n\n\n", cJSON_Print(nl));
-            char answer[100*sizeof(char)]; scanf("%s", &answer);
+            char* answer; answer = scanfn();
 
             if (strcmp(answer, fr->valuestring) != 0) {
                printf("wrong : %s\n\n", fr->valuestring);
                
-               char delay; scanf(" %c", &delay);
-               if (delay != CORRECTION_CHAR) {
+               char* delay = scanfn();
+               if (strlen(delay) == 0) {
                   cJSON_AddItemToArray(todo, cJSON_DetachItemFromArray(todo, 0));
                   
                   if (wrong+correct < SETSIZE) {wrong += 1;}
@@ -150,7 +150,7 @@ int main() { while (true) {
             }
             if (wrong+correct < SETSIZE) {correct += 1;}
             
-            printf("correct: %s\n", fr->valuestring); 
+            printf("\ncorrect: %s\n\n", fr->valuestring); scanfn();
             cJSON_AddItemToArray(done, cJSON_DetachItemFromArray(todo, 0));
 
             previous->valueint = previous->valueint-1;
