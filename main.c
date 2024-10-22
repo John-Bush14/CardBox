@@ -58,6 +58,12 @@ int main() { while (true) {
    }
 } return 0;}
 
+void saveCardbox(char* file, cJSON* cardbox) {
+   FILE* fileHandle = fopen(file, "w");
+   fprintf(fileHandle, cJSON_Print(cardbox));
+   fclose(fileHandle);
+}
+
 void import(char* file) {
          // seperate file into words
          char splitCommand[200*sizeof(char)]; 
@@ -168,6 +174,8 @@ void learn(char* file) {
             
             previous->valuedouble = previous->valueint; next->valuedouble = next->valueint; offset->valuedouble = offset->valueint;
          }
+
+
          cJSON* completion = cJSON_CreateArray();  
          cJSON_AddItemToArray(completion, cJSON_CreateNumber(correct/SET_SIZE));   
          
@@ -180,9 +188,9 @@ void learn(char* file) {
 
          cJSON_AddItemToArray(completions, completion);
 
-         FILE* svFilePtr = fopen(file, "w");
-         fprintf(svFilePtr, cJSON_Print(cardbox));
-         fclose(svFilePtr);
+
+         saveCardbox(file, cardbox);
+
 
          cJSON_Delete(cardbox); 
 }
