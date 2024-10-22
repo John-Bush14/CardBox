@@ -1,5 +1,8 @@
 #include<string.h>
 #include<stdlib.h>
+#include<stdio.h>
+#include<stdbool.h>
+#include<dirent.h>
 
 #ifndef NECESSITY_H
 #define NECESSITY_H
@@ -75,5 +78,33 @@ char* read(char* filePath) {
    fileStr[fileSize] = '\0';
 
    fclose(filePtr); return fileStr;
+}
+
+char* fileChoice(char* folder, char* filterExt) {
+   DIR *dir = opendir(folder); if (!dir) {printf("help!");}
+
+   int fileIndex = 0; char* files[50];
+
+   char* file = malloc(101*sizeof(char));
+   if (file == NULL) {printf("file malloc failed!"); closedir(dir); return NULL;}
+
+   struct dirent *handle; char* ext;
+   while ((handle = readdir(dir)) != NULL) {
+      ext = substr(handle->d_name,-5, -1);
+   
+      if (ext != NULL && strcmp(ext, filterExt) == 0) { 
+         files[fileIndex] = handle->d_name;
+         printf("%i. %s\n", fileIndex, handle->d_name); fileIndex += 1;
+      } 
+   
+      if (ext == NULL) {free(ext);}
+   } closedir(dir); 
+
+   int chosenFile; 
+   scanf("%i", &chosenFile);
+
+   if (chosenFile >= fileIndex && file != NULL) {free(file);}
+   else {file = files[chosenFile];}
+   if (file != NULL) {return file;} return NULL;
 }
 #endif
