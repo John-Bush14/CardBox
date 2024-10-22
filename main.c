@@ -13,27 +13,31 @@ const int RANDOMNESS = 10;
 
 void TODO() {printf("NOT DONE BRUV"); _Exit(0);}
 
-char* fileList(char* folder, char* ext) {
-   DIR *d; struct dirent *dir; d = opendir(folder); if (!d) {printf("help!");}
+char* fileList(char* folder, char* filterExt) {
+   DIR *dir = opendir(folder); if (!dir) {printf("help!");}
 
-   int temp = 0; char* sub; char* files[50]; int fileIndex; 
+   int fileIndex = 0; char* files[50];
 
    char* file = malloc(101*sizeof(char));
-   if (file == NULL) {printf("file malloc failed!"); closedir(d); return NULL;}
+   if (file == NULL) {printf("file malloc failed!"); closedir(dir); return NULL;}
 
-   while ((dir = readdir(d)) != NULL) {
-      sub = substr(dir->d_name,-5, -1);
+   struct dirent *handle; char* ext;
+   while ((handle = readdir(dir)) != NULL) {
+      ext = substr(handle->d_name,-5, -1);
    
-      if (sub != NULL && strcmp(sub, ext) == 0) { files[temp] = dir->d_name;
-         printf("%i. %s\n", temp, dir->d_name); temp += 1;} 
+      if (ext != NULL && strcmp(ext, filterExt) == 0) { 
+         files[fileIndex] = handle->d_name;
+         printf("%i. %s\n", fileIndex, handle->d_name); fileIndex += 1;
+      } 
    
-      if (sub == NULL) {free(sub);}
-   } closedir(d); 
+      if (ext == NULL) {free(ext);}
+   } closedir(dir); 
 
-   scanf("%i", &fileIndex);
+   int chosenFile; 
+   scanf("%i", &chosenFile);
 
-   if (fileIndex >= temp && file != NULL) {free(file);}
-   else {file = files[fileIndex];}
+   if (chosenFile >= fileIndex && file != NULL) {free(file);}
+   else {file = files[chosenFile];}
    if (file != NULL) {return file;} return NULL;
 }
 
@@ -49,7 +53,7 @@ void plotProgress(cJSON* cJSON_Save) {
 
 int main() { while (true) {
    printf("1. Import box, 2. Learn box or 3. See progress\n"); int action; scanf("%i", &action);
-   pthread_t thread;
+   pthread_t plotThread;
 
    switch (action) {
       case 1: // importing box (searchpoint)
@@ -59,24 +63,29 @@ int main() { while (true) {
          char* UIFilePath = fileList(cardBoxes, "html"); printf("\n"); if (UIFilePath == NULL) {printf("fileList return null!"); return 0;}
                   
          // seperate file into words
-         char command[200*sizeof(char)]; 
-         snprintf(command, sizeof(command), "awk -F 'lang-(nl|fr)\">' '{ for (i=2; i<=NF; i++) {split($i, a, \"<\"); print(a[1])}}' ./cardBoxes/%s", UIFilePath);
+         char splitCommand[200*sizeof(char)]; 
+         snprintf(splitCommand, sizeof(splitCommand), "awk -F 'lang-(nl|fr)\">' '{ for (i=2; i<=NF; i++) {split($i, a, \"<\"); print(a[1])}}' ./cardBoxes/%s", UIFilePath);
          
-         FILE* output; char curWord[50*sizeof(char)]; cJSON* words = cJSON_CreateArray(); int wordslen = 0;
-         output = popen(command, "r"); if (output==NULL) {printf("awk failed"); exit(0);}
 
-         for (int i = 0; i<2; i++) {fgets(curWord, sizeof(curWord), output);} // skip first double cardset
+         FILE* output; output = popen(splitCommand, "r"); if (output==NULL) {printf("awk failed"); exit(0);}
 
-         while (fgets(curWord, sizeof(curWord), output)) {
+         cJSON* words = cJSON_CreateArray(); int wordCount = 0;
+
+
+         char word[50*sizeof(char)]; 
+
+         for (int i = 0; i<2; i++) {fgets(word, sizeof(word), output);} // skip first double cardset
+
+         while (fgets(word, sizeof(word), output)) {
             cJSON* frNlArr = cJSON_CreateArray();
             if (frNlArr==NULL) {break;}
             
             for (int i = 0; i<2; i++) {
-               printf(curWord);
-               char *newline = strchr(curWord, '\n');
+               printf(word);
+               char *newline = strchr(word, '\n');
                if (newline != NULL) *newline = '\0';
-               cJSON_AddItemToArray(frNlArr, cJSON_CreateString(curWord)); if (i == 1) {continue;}
-               if (fgets(curWord, sizeof(curWord), output)==NULL) {break;} wordslen += 1;
+               cJSON_AddItemToArray(frNlArr, cJSON_CreateString(word)); if (i == 1) {continue;}
+               if (fgets(word, sizeof(word), output)==NULL) {break;} wordCount += 1;
             }
 
             cJSON_AddItemToArray(words, frNlArr);
@@ -88,7 +97,7 @@ int main() { while (true) {
          cJSON_AddItemToObject(box, "todo", words);
          cJSON_AddItemToObject(box, "done", cJSON_CreateArray()); 
          cJSON_AddItemToObject(box, "completions", cJSON_CreateArray());
-         cJSON_AddItemToObject(box, "previous", cJSON_CreateNumber(wordslen));
+         cJSON_AddItemToObject(box, "previous", cJSON_CreateNumber(wordCount));
          cJSON_AddItemToObject(box, "next", cJSON_CreateNumber(0));
          cJSON_AddItemToObject(box, "offset", cJSON_CreateNumber(0));
 
@@ -104,12 +113,12 @@ int main() { while (true) {
          break;
          
       case 2: // learning box (searchpoint)
-         char* fileName = fileList(cardBoxes, "json"); if (fileName==NULL) {free(fileName); return 0;}      
-         char filePath[200*sizeof(char)]; snprintf(filePath, sizeof(filePath), "cardBoxes/%s", fileName);
+         char* SVFile = fileList(cardBoxes, "json"); if (SVFile==NULL) {free(SVFile); return 0;}      
+         char SVFilePath[200*sizeof(char)]; snprintf(SVFilePath, sizeof(SVFilePath), "cardBoxes/%s", SVFile);
 
-         char* svFileStr = read(filePath);
+         char* SVFileStr = read(SVFilePath);
          // parse file
-         cJSON* cardbox = cJSON_Parse(svFileStr); 
+         cJSON* cardbox = cJSON_Parse(SVFileStr); 
 
          cJSON* todo = cJSON_GetObjectItemCaseSensitive(cardbox, "todo");
          cJSON* done = cJSON_GetObjectItemCaseSensitive(cardbox, "done");
@@ -175,21 +184,21 @@ int main() { while (true) {
 
          cJSON_AddItemToArray(completions, completion);
 
-         FILE* svFilePtr = fopen(filePath, "w");
+         FILE* svFilePtr = fopen(SVFilePath, "w");
          fprintf(svFilePtr, cJSON_Print(cardbox));
          fclose(svFilePtr);
 
          cJSON_Delete(cardbox); break;
 
       case 3: // showing progress (searchpoint)
-         char* svFileName = fileList(cardBoxes, "json"); if (svFileName==NULL) {free(svFileName); return 0;}      
-         char FilePath[200*sizeof(char)]; snprintf(FilePath, sizeof(FilePath), "cardBoxes/%s", svFileName);
+         char* SVFileName = fileList(cardBoxes, "json"); if (SVFileName==NULL) {free(SVFileName); return 0;}      
+         char FilePath[200*sizeof(char)]; snprintf(FilePath, sizeof(FilePath), "cardBoxes/%s", SVFileName);
          cJSON* cJSON_Save = malloc(sizeof(cJSON)); if (cJSON_Save == NULL) {return 0;} 
          cJSON_Save = cJSON_Parse(read(FilePath));
-         pthread_create(&thread, NULL, plotProgress, cJSON_Save);
+         pthread_create(&plotThread, NULL, plotProgress, cJSON_Save);
 
          break;
    
-      default: pthread_join(thread, NULL); _Exit(0); 
+      default: pthread_join(plotThread, NULL); _Exit(0); 
    }
 } return 0;}
