@@ -8,8 +8,8 @@
 #include<plplot/plplot.h>
 
 const char* cardBoxes = "./cardBoxes";
-const int SETSIZE = 20;
-const int MAX_CHOOSEINDEX = 10;
+const int SET_SIZE = 20;
+const int RANDOMNESS = 10;
 
 void TODO() {printf("NOT DONE BRUV"); _Exit(0);}
 
@@ -124,12 +124,12 @@ int main() { while (true) {
          } 
          
          // learning file
-         int sizeTarget = max(cJSON_GetArraySize(todo)-SETSIZE, 0);
+         int sizeTarget = max(cJSON_GetArraySize(todo)-SET_SIZE, 0);
          double correct = 0; double wrong = 0;
 
          while (cJSON_GetArraySize(todo) > sizeTarget) {
             srand(time(NULL));
-            cJSON* set = cJSON_GetArrayItem(todo, rand()%min(cJSON_GetArraySize(todo), MAX_CHOOSEINDEX));
+            cJSON* set = cJSON_GetArrayItem(todo, rand()%min(cJSON_GetArraySize(todo), RANDOMNESS));
             cJSON* fr = cJSON_GetArrayItem(set, 0);
             cJSON* nl = cJSON_GetArrayItem(set, 1);
 
@@ -143,12 +143,12 @@ int main() { while (true) {
                if (strlen(delay) == 0) {
                   cJSON_AddItemToArray(todo, cJSON_DetachItemFromArray(todo, 0));
                   
-                  if (wrong+correct < SETSIZE) {wrong += 1;}
+                  if (wrong+correct < SET_SIZE) {wrong += 1;}
 
                   continue;
                }
             }
-            if (wrong+correct < SETSIZE) {correct += 1;}
+            if (wrong+correct < SET_SIZE) {correct += 1;}
             
             printf("\ncorrect: %s\n\n", fr->valuestring); scanfn();
             cJSON_AddItemToArray(done, cJSON_DetachItemFromArray(todo, 0));
@@ -159,7 +159,7 @@ int main() { while (true) {
             previous->valuedouble = previous->valueint; next->valuedouble = next->valueint; offset->valuedouble = offset->valueint;
          }
          cJSON* completion = cJSON_CreateArray();  
-         cJSON_AddItemToArray(completion, cJSON_CreateNumber(correct/SETSIZE));   
+         cJSON_AddItemToArray(completion, cJSON_CreateNumber(correct/SET_SIZE));   
          
          time_t now = time(NULL) ;
          struct tm curTime ;
