@@ -28,15 +28,40 @@ int main() { while (true) {
    pthread_t plotThread;
 
    switch (action) {
-      case 1: // importing box (searchpoint)
-
-         // get files to import
+      case 1:
          printf("Choose box to import:\n");
-         char* UIFilePath = fileList(cardBoxes, "html"); printf("\n"); if (UIFilePath == NULL) {printf("fileList return null!"); return 0;}
+         char* chosenFile = fileChoice(cardBoxes, "html");
+         printf("\n");
+
+         import(chosenFile);
                   
+         break;
+         
+      case 2: // learning box (searchpoint)
+         char* learnFile = fileChoice(cardBoxes, "json");
+         char learnFilePath[200*sizeof(char)]; snprintf(learnFilePath, sizeof(learnFilePath), "cardBoxes/%s", learnFile);
+         
+         learn(learnFilePath);
+
+         break;
+
+      case 3: // showing progress (searchpoint)
+         char* SVFileName = fileChoice(cardBoxes, "json"); if (SVFileName==NULL) {free(SVFileName); return 0;}      
+         char FilePath[200*sizeof(char)]; snprintf(FilePath, sizeof(FilePath), "cardBoxes/%s", SVFileName);
+         cJSON* cJSON_Save = malloc(sizeof(cJSON)); if (cJSON_Save == NULL) {return 0;} 
+         cJSON_Save = cJSON_Parse(read(FilePath));
+         pthread_create(&plotThread, NULL, plotProgress, cJSON_Save);
+
+         break;
+   
+      default: pthread_join(plotThread, NULL); _Exit(0); 
+   }
+} return 0;}
+
+void import(char* file) {
          // seperate file into words
          char splitCommand[200*sizeof(char)]; 
-         snprintf(splitCommand, sizeof(splitCommand), "awk -F 'lang-(nl|fr)\">' '{ for (i=2; i<=NF; i++) {split($i, a, \"<\"); print(a[1])}}' ./cardBoxes/%s", UIFilePath);
+         snprintf(splitCommand, sizeof(splitCommand), "awk -F 'lang-(nl|fr)\">' '{ for (i=2; i<=NF; i++) {split($i, a, \"<\"); print(a[1])}}' ./cardBoxes/%s", file);
          
 
          FILE* output; output = popen(splitCommand, "r"); if (output==NULL) {printf("awk failed"); exit(0);}
@@ -77,20 +102,19 @@ int main() { while (true) {
          char name[50*sizeof(char)]; printf("\n\nname? "); scanf("%s", name); char svFilePath[100*sizeof(char)];
          snprintf(svFilePath, sizeof(svFilePath), "cardBoxes/%s.json", name);
          FILE* svFile = fopen(svFilePath, "w");  
-         if (svFile == NULL) {printf("help"); cJSON_Delete(box); return 0;}
+         if (svFile == NULL) {printf("help"); cJSON_Delete(box);}
 
          fprintf(svFile, cJSON_Print(box));
 
          cJSON_Delete(box); fclose(svFile); 
-         break;
-         
-      case 2: // learning box (searchpoint)
-         char* SVFile = fileList(cardBoxes, "json"); if (SVFile==NULL) {free(SVFile); return 0;}      
-         char SVFilePath[200*sizeof(char)]; snprintf(SVFilePath, sizeof(SVFilePath), "cardBoxes/%s", SVFile);
 
-         char* SVFileStr = read(SVFilePath);
+}
+
+void learn(char* file) {
+         char* fileStr = read(file);
+
          // parse file
-         cJSON* cardbox = cJSON_Parse(SVFileStr); 
+         cJSON* cardbox = cJSON_Parse(fileStr); 
 
          cJSON* todo = cJSON_GetObjectItemCaseSensitive(cardbox, "todo");
          cJSON* done = cJSON_GetObjectItemCaseSensitive(cardbox, "done");
@@ -156,21 +180,9 @@ int main() { while (true) {
 
          cJSON_AddItemToArray(completions, completion);
 
-         FILE* svFilePtr = fopen(SVFilePath, "w");
+         FILE* svFilePtr = fopen(file, "w");
          fprintf(svFilePtr, cJSON_Print(cardbox));
          fclose(svFilePtr);
 
-         cJSON_Delete(cardbox); break;
-
-      case 3: // showing progress (searchpoint)
-         char* SVFileName = fileList(cardBoxes, "json"); if (SVFileName==NULL) {free(SVFileName); return 0;}      
-         char FilePath[200*sizeof(char)]; snprintf(FilePath, sizeof(FilePath), "cardBoxes/%s", SVFileName);
-         cJSON* cJSON_Save = malloc(sizeof(cJSON)); if (cJSON_Save == NULL) {return 0;} 
-         cJSON_Save = cJSON_Parse(read(FilePath));
-         pthread_create(&plotThread, NULL, plotProgress, cJSON_Save);
-
-         break;
-   
-      default: pthread_join(plotThread, NULL); _Exit(0); 
-   }
-} return 0;}
+         cJSON_Delete(cardbox); 
+}
