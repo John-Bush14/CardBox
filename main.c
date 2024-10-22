@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<stdbool.h>
 #include<dirent.h>
-#include"necessity.h"
+#include"unrelated_functions.h"
 #include"cJSON/cJSON.h"
 #include<time.h>
 #include<pthread.h>
