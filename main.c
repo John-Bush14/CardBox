@@ -15,17 +15,24 @@ void TODO() {printf("NOT DONE BRUV"); _Exit(0);}
 
 char* fileList(char* folder, char* ext) {
    DIR *d; struct dirent *dir; d = opendir(folder); if (!d) {printf("help!");}
-   int temp = 0; char* sub; char* files[50]; int fileIndex; char* file = malloc(101*sizeof(char)); if (file == NULL) {free(file); return NULL;}
+
+   int temp = 0; char* sub; char* files[50]; int fileIndex; 
+
+   char* file = malloc(101*sizeof(char));
    if (file == NULL) {printf("file malloc failed!"); closedir(d); return NULL;}
 
-   while ((dir = readdir(d)) != NULL) { if (dir->d_name == NULL) {continue;}
-   sub = substr(dir->d_name,-5, -1);
+   while ((dir = readdir(d)) != NULL) {
+      sub = substr(dir->d_name,-5, -1);
    
-   if (sub != NULL && strcmp(sub, ext) == 0) { files[temp] = dir->d_name;
-      printf("%i. %s\n", temp, dir->d_name); temp += 1;} 
+      if (sub != NULL && strcmp(sub, ext) == 0) { files[temp] = dir->d_name;
+         printf("%i. %s\n", temp, dir->d_name); temp += 1;} 
    
-   if (sub == NULL) {free(sub);}} closedir(d); 
-   scanf("%i", &fileIndex); if (fileIndex >= temp && file != NULL) {free(file);}
+      if (sub == NULL) {free(sub);}
+   } closedir(d); 
+
+   scanf("%i", &fileIndex);
+
+   if (fileIndex >= temp && file != NULL) {free(file);}
    else {file = files[fileIndex];}
    if (file != NULL) {return file;} return NULL;
 }
@@ -33,8 +40,6 @@ char* fileList(char* folder, char* ext) {
 void plotProgress(cJSON* cJSON_Save) {     
    plsdev("qtwidget");
    plinit();
-
-   
    
    // End PLplot
    plend();
