@@ -27,12 +27,15 @@ char* substr(char* str, int x, int y) {
 
 char* scanfn() { // ends scan when user newlines
    static char input[100]; // Assuming input line won't exceed 100 characters
-   if (input == NULL) {return NULL;}
 
    fgets(input, sizeof(input), stdin);
+      
+//  if (input[0] == '\n') {fgets(input, sizeof(input), stdin);}
+
 
    // Remove trailing newline character if present
    input[strcspn(input, "\n")] = '\0';
+   
 
    return input;
 }

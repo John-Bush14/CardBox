@@ -138,7 +138,7 @@ void learn(char* file) {
                cJSON_AddItemToArray(todo, cJSON_DetachItemFromArray(done, 0));
             }
          } 
-         
+
          // learning file
          int sizeTarget = max(cJSON_GetArraySize(todo)-SET_SIZE, 0);
          double correct = 0; double wrong = 0;
@@ -152,11 +152,14 @@ void learn(char* file) {
             cJSON* nl = cJSON_GetArrayItem(set, 1);
 
             printf("\033[H\033[J \n%s\n\n\n", cJSON_Print(nl));
+            
+            if (correct == 0 && wrong == 0) {scanfn();}
+
             char* answer; answer = scanfn();
 
             if (strcmp(answer, fr->valuestring) != 0) {
                printf("wrong : %s\n\n", fr->valuestring);
-               
+
                char* delay = scanfn();
                if (strlen(delay) == 0) {
                   cJSON_AddItemToArray(todo, cJSON_DetachItemFromArray(todo, set_index));
