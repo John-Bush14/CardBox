@@ -145,7 +145,9 @@ void learn(char* file) {
 
          while (cJSON_GetArraySize(todo) > sizeTarget) {
             srand(time(NULL));
-            cJSON* set = cJSON_GetArrayItem(todo, rand()%min(cJSON_GetArraySize(todo), RANDOMNESS));
+            int set_index = rand()%min(cJSON_GetArraySize(todo), RANDOMNESS);
+
+            cJSON* set = cJSON_GetArrayItem(todo, set_index);
             cJSON* fr = cJSON_GetArrayItem(set, 0);
             cJSON* nl = cJSON_GetArrayItem(set, 1);
 
@@ -157,7 +159,7 @@ void learn(char* file) {
                
                char* delay = scanfn();
                if (strlen(delay) == 0) {
-                  cJSON_AddItemToArray(todo, cJSON_DetachItemFromArray(todo, 0));
+                  cJSON_AddItemToArray(todo, cJSON_DetachItemFromArray(todo, set_index));
                   
                   if (wrong+correct < SET_SIZE) {wrong += 1;}
 
@@ -167,7 +169,7 @@ void learn(char* file) {
             if (wrong+correct < SET_SIZE) {correct += 1;}
             
             printf("\ncorrect: %s\n\n", fr->valuestring); scanfn();
-            cJSON_AddItemToArray(done, cJSON_DetachItemFromArray(todo, 0));
+            cJSON_AddItemToArray(done, cJSON_DetachItemFromArray(todo, set_index));
 
             previous->valueint = previous->valueint-1;
             next->valueint = next->valueint+1;
